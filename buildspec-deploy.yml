@@ -1,0 +1,9 @@
+version: 0.2
+
+phases:
+  post_build:
+    finally:
+      - BUCKET=${CODEBUILD_SOURCE_VERSION##*:}   # After
+      - BUCKET=${BUCKET%%/*}    # Before
+      - KEY=${CODEBUILD_SOURCE_VERSION#*/}
+      - aws lambda update-function-code --function-name $FUNCTION_NAME --s3-bucket $BUCKET --s3-key $KEY

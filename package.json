@@ -1,0 +1,24 @@
+{
+  "name": "0x4447-project-email-lambda-inbound",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "locally": "node -e 'require(\"./index\").handler(require(\"./lambda-payloads.json\"), \"{}\", function(error, response) {(error) ? console.log(\"Error: \", error) : console.log(\"Response: \", response) })'",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0x4447/0x4447-Project-Email-Lambda-Inbound.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/0x4447/0x4447-Project-Email-Lambda-Inbound/issues"
+  },
+  "homepage": "https://github.com/0x4447/0x4447-Project-Email-Lambda-Inbound#readme",
+  "dependencies": {
+    "aws-sdk": "^2.388.0",
+    "mailparser": "^2.4.3"
+  }
+}

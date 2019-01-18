@@ -1,0 +1,11 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: 'AWS::Serverless-2016-10-31'
+Description: Organizes all the emails that come in.
+Resources:
+  Inbound:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      Handler: index.handler
+      MemorySize: 128
+      Runtime: nodejs8.10
+      Timeout: 3
