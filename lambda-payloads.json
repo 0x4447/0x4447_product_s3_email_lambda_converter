@@ -27,7 +27,7 @@
           "arn": "arn:aws:s3:::example-bucket"
         },
         "object": {
-          "key": "0x4447.email/Inbox/null/0x4447.com/david/Thu, 17 Jan 2019 23:43:21 +0100 - Time stamp",
+          "key": "Inbox/0x4447.email/null/0x4447.com/david/Sat%2C+19+Jan+2019+11%3A22%3A40+%2B0100+-+Re%3A+Test/email",
           "size": 1024,
           "eTag": "0123456789abcdef0123456789abcdef",
           "sequencer": "0A1B2C3D4E5F678901"
