@@ -19,7 +19,7 @@ exports.handler = (event) => {
 	//
 	let container = {
 		bucket: event.Records[0].s3.bucket.name,
-		key: decodeURIComponent(event.Records[0].s3.object.key),
+		key: event.Records[0].s3.object.key,
 		parsed: {
 			html: "",
 			text: ""
