@@ -355,17 +355,35 @@ function save_attachments(container)
 			let path = tmp.join('/');
 
 			//
-			//	7. 	With a clean key, we can create an updated one which contains
+			//	7.	This variable is used if there are two files of the same
+			//		name.
+			//
+			let cid = "";
+
+			//
+			//	8.	If the CID is set then it means that two files have the
+			//		same names.
+			//
+			if(file.cid)
+			{
+				//
+				//	1.	Add the CID in front of the name of the file so they
+				//		won't be overwritten.
+				//
+				cid = file.cid + " - "
+			}
+
+			//
+			//	9. 	With a clean key, we can create an updated one which contains
 			//		the path to for the attachments.
 			//
 			let key = 	path
 						+ "/attachments/"
-						+ file.cid
-						+ " - "
+						+ cid
 						+ file_name
 
 			//
-			//	8.	Set the query.
+			//	10.	Set the query.
 			//
 			let params = {
 				Bucket: container.bucket,
