@@ -1,5 +1,6 @@
 let AWS = require('aws-sdk');
 let parser = require("mailparser").simpleParser;
+let mime = require('mime');
 
 //
 //	Initialize S3.
@@ -37,7 +38,8 @@ exports.handler = (event) => {
 		key: unescaped_key,
 		parsed: {
 			html: "",
-			text: ""
+			text: "",
+			attachments: []
 		}
 	}
 
@@ -53,11 +55,11 @@ exports.handler = (event) => {
 
 		}).then(function(container) {
 
-			return save_html(container);
+			return save_text(container);
 
 		}).then(function(container) {
 
-			return save_text(container);
+			return save_html(container);
 
 		}).then(function(container) {
 
@@ -155,6 +157,50 @@ function parse_the_email(container)
 			//
 			container.parsed.html = parsed.html;
 			container.parsed.text = parsed.text;
+			container.parsed.attachments = parsed.attachments;
+
+			//
+			//	->	Move to the next chain.
+			//
+			return resolve(container);
+
+		});
+
+	});
+}
+
+//
+//	Save the text version of the email
+//
+function save_text(container)
+{
+	return new Promise(function(resolve, reject) {
+
+		console.info("save_text");
+
+		//
+		//	1.	Set the query.
+		//
+		let params = {
+			Bucket: container.bucket,
+			Key: container.key + ".txt",
+			Body: container.parsed.text
+		};
+
+		console.log(params);
+
+		//
+		//	->	Execute the query.
+		//
+		s3.putObject(params, function(error, data) {
+
+			//
+			//	1.	Check for internal errors.
+			//
+			if(error)
+			{
+				return reject(error);
+			}
 
 			//
 			//	->	Move to the next chain.
@@ -228,21 +274,35 @@ function save_html(container)
 }
 
 //
-//	Save the text version of the email
+//	Save all the attachments
 //
-function save_text(container)
+function save_attachments(container)
 {
 	return new Promise(function(resolve, reject) {
 
-		console.info("save_text");
+		console.info("save_attachments");
+
+		let file = container.parsed.attachments
+
+		file_type = file[0].contentType
+
+		file_name = file[0].filename
+		file_body = file[0].content
+		file_extension = mime.getExtension(file[0].contentType);
+
+		let key = 	container.key
+					+ "/attachments/"
+					+ file_name
+					+ "."
+					+ file_extension
 
 		//
 		//	1.	Set the query.
 		//
 		let params = {
 			Bucket: container.bucket,
-			Key: container.key + ".txt",
-			Body: container.parsed.text
+			Key: key,
+			Body: file_body
 		};
 
 		console.log(params);
