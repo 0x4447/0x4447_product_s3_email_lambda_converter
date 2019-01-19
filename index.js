@@ -360,6 +360,8 @@ function save_attachments(container)
 			//
 			let key = 	path
 						+ "/attachments/"
+						+ file.cid
+						+ " - "
 						+ file_name
 
 			//
