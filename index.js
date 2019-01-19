@@ -286,67 +286,19 @@ function save_attachments(container)
 		console.info("save_attachments");
 
 		//
-		//	1.	Create a simple variable name.
+		//	Start the loop which will download all the ads.
 		//
-		let file = container.parsed.attachments
-
-		//
-		//	2.	Get the file name which also contain the file extension.
-		//
-		file_name = file[0].filename
-
-		//
-		//	3.	Then save the buffer of the attachment.
-		//
-		file_body = file[0].content
-
-		//
-		//	4.	Split the S3 Key (path) so we can remove the last element.
-		//
-		let tmp = container.key.split('/');
-
-		//
-		//	5.	Now remove the last element from the array which is the
-		//		file name that contains the raw email.
-		//
-		tmp.pop();
-
-		//
-		//	6.	After all this we recombine the array in to a single string
-		//		which becomes again the S3 Key minus the file name.
-		//
-		let path = tmp.join('/');
-
-		//
-		//	7. 	With a clean key, we can create an updated one which contains
-		//		the path to for the attachments.
-		//
-		let key = 	path
-					+ "/attachments/"
-					+ file_name
-
-		//
-		//	8.	Set the query.
-		//
-		let params = {
-			Bucket: container.bucket,
-			Key: key,
-			Body: file_body
-		};
-
-		console.log(params);
-
-		//
-		//	->	Execute the query.
-		//
-		s3.putObject(params, function(error, data) {
+		loop(function(error) {
 
 			//
-			//	1.	Check for internal errors.
+			//	<<> Check if there was an error.
 			//
 			if(error)
 			{
-				return reject(error);
+				//
+				//	->	Move to the next chain.
+				//
+				return reject(container);
 			}
 
 			//
@@ -355,6 +307,92 @@ function save_attachments(container)
 			return resolve(container);
 
 		});
+
+		//
+		//	This loop will upload all the individual attachments found
+		//	in a email.
+		//
+		function loop(callback)
+		{
+			//
+			//	1.	Create a simple variable name.
+			//
+			let file = container.parsed.attachments.pop()
+
+			//
+			//	2.	if there is nothing left then we stop the loop.
+			//
+			if(!file)
+			{
+				return callback();
+			}
+
+			//
+			//	2.	Get the file name which also contain the file extension.
+			//
+			file_name = file.filename
+
+			//
+			//	3.	Then save the buffer of the attachment.
+			//
+			file_body = file.content
+
+			//
+			//	4.	Split the S3 Key (path) so we can remove the last element.
+			//
+			let tmp = container.key.split('/');
+
+			//
+			//	5.	Now remove the last element from the array which is the
+			//		file name that contains the raw email.
+			//
+			tmp.pop();
+
+			//
+			//	6.	After all this we recombine the array in to a single string
+			//		which becomes again the S3 Key minus the file name.
+			//
+			let path = tmp.join('/');
+
+			//
+			//	7. 	With a clean key, we can create an updated one which contains
+			//		the path to for the attachments.
+			//
+			let key = 	path
+						+ "/attachments/"
+						+ file_name
+
+			//
+			//	8.	Set the query.
+			//
+			let params = {
+				Bucket: container.bucket,
+				Key: key,
+				Body: file_body
+			};
+
+			console.log(params);
+
+			//
+			//	->	Execute the query.
+			//
+			s3.putObject(params, function(error, data) {
+
+				//
+				//	1.	Check for internal errors.
+				//
+				if(error)
+				{
+					return callback(error);
+				}
+
+				//
+				//	->	Move to the next chain.
+				//
+				return loop(callback);
+
+			});
+		}
 
 	});
 }
