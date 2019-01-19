@@ -173,6 +173,24 @@ function save_html(container)
 {
 	return new Promise(function(resolve, reject) {
 
+		//
+		//	<>> When the body of an email have only one version, meaning it
+		//		dose have only the pure text version and no HTML one.
+		//
+		//		Nodemailer won't generate the HTML for you, it just grabs
+		//		what is in the Email body.
+		//
+		//		So, this value will be false, when there is no HTML content in
+		//		the email.
+		//
+		if(!container.parsed.html)
+		{
+			//
+			//	->	Move to the next chain.
+			//
+			return resolve(container);
+		}
+
 		console.info("save_html");
 
 		//
