@@ -63,6 +63,10 @@ exports.handler = (event) => {
 
 		}).then(function(container) {
 
+			return save_attachments(container);
+
+		}).then(function(container) {
+
 			return true;
 
 		}).catch(function(error) {
