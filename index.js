@@ -297,7 +297,9 @@ function save_attachments(container)
 		//
 		//
 		//
-		let path = container.key.split('/').tmp.pop().join('/');
+		let tmp = container.key.split('/');
+		let tmp2 = tmp.pop();
+		let path = tmp2.join('/');
 
 		let key = 	path
 					+ "/attachments/"
