@@ -294,7 +294,12 @@ function save_attachments(container)
 		file_body = file[0].content
 		file_extension = mime.getExtension(file[0].contentType);
 
-		let key = 	container.key
+		//
+		//
+		//
+		let path = container.key.split('/').tmp.pop().join('/');
+
+		let key = 	path
 					+ "/attachments/"
 					+ file_name
 					+ "."
