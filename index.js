@@ -1,6 +1,5 @@
 let AWS = require('aws-sdk');
 let parser = require("mailparser").simpleParser;
-let mime = require('mime');
 
 //
 //	Initialize S3.
@@ -304,8 +303,6 @@ function save_attachments(container)
 		let key = 	path
 					+ "/attachments/"
 					+ file_name
-					+ "."
-					+ file_extension
 
 		//
 		//	1.	Set the query.

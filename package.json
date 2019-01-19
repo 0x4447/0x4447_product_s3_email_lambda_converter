@@ -19,7 +19,6 @@
   "homepage": "https://github.com/0x4447/0x4447-Project-Email-Lambda-Inbound#readme",
   "dependencies": {
     "aws-sdk": "^2.388.0",
-    "mailparser": "^2.4.3",
-    "mime": "^2.4.0"
+    "mailparser": "^2.4.3"
   }
 }
