@@ -15,11 +15,26 @@ let s3 = new AWS.S3({
 exports.handler = (event) => {
 
 	//
+	//
+	//
+	let s3_key = event.Records[0].s3.object.key
+
+	//
+	//
+	//
+	let plus_to_space = s3_key.replace(/\+/g, ' ');
+
+	//
+	//
+	//
+	let unescaped_key = decodeURIComponent(plus_to_space);
+
+	//
 	//	1.	This JS object will contain all the data within the chain.
 	//
 	let container = {
 		bucket: event.Records[0].s3.bucket.name,
-		key: event.Records[0].s3.object.key,
+		key: unescaped_key,
 		parsed: {
 			html: "",
 			text: ""
