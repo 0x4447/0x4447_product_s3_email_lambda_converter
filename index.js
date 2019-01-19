@@ -15,22 +15,22 @@ let s3 = new AWS.S3({
 exports.handler = (event) => {
 
 	//
+	//	1.	To a simple variable.
 	//
-	//
-	let s3_key = event.Records[0].s3.object.key
+	let s3_key = event.Records[0].s3.object.key.
 
 	//
-	//
+	//	2.	Replace all the + characters to a space one.
 	//
 	let plus_to_space = s3_key.replace(/\+/g, ' ');
 
 	//
-	//
+	//	3.	Unescape the HTML URI style string.
 	//
 	let unescaped_key = decodeURIComponent(plus_to_space);
 
 	//
-	//	1.	This JS object will contain all the data within the chain.
+	//	4.	This JS object will contain all the data within the chain.
 	//
 	let container = {
 		bucket: event.Records[0].s3.bucket.name,
