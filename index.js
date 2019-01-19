@@ -83,6 +83,8 @@ function load_the_email(container)
 			Key: container.key
 		};
 
+		console.log(params)
+
 		//
 		//	->	Execute the query.
 		//
