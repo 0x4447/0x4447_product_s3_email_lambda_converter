@@ -17,7 +17,7 @@ exports.handler = (event) => {
 	//
 	//	1.	To a simple variable.
 	//
-	let s3_key = event.Records[0].s3.object.key.
+	let s3_key = event.Records[0].s3.object.key;
 
 	//
 	//	2.	Replace all the + characters to a space one.
