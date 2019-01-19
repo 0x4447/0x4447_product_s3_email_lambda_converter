@@ -285,21 +285,39 @@ function save_attachments(container)
 
 		console.info("save_attachments");
 
+		//
+		//
+		//
 		let file = container.parsed.attachments
 
-		file_type = file[0].contentType
-
+		//
+		//
+		//
 		file_name = file[0].filename
+
+		//
+		//
+		//
 		file_body = file[0].content
-		file_extension = mime.getExtension(file[0].contentType);
 
 		//
 		//
 		//
 		let tmp = container.key.split('/');
+
+		//
+		//
+		//
 		tmp.pop();
+
+		//
+		//
+		//
 		let path = tmp.join('/');
 
+		//
+		//
+		//
 		let key = 	path
 					+ "/attachments/"
 					+ file_name
