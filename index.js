@@ -184,6 +184,8 @@ function save_html(container)
 			Body: container.parsed.html
 		};
 
+		console.log(params)
+
 		//
 		//	->	Execute the query.
 		//
@@ -224,6 +226,8 @@ function save_text(container)
 			Key: container.key + ".txt",
 			Body: container.parsed.text
 		};
+
+		console.log(params);
 
 		//
 		//	->	Execute the query.
