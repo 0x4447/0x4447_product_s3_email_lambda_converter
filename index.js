@@ -9,23 +9,26 @@ let s3 = new AWS.S3({
 });
 
 //
-//	This lambda will read each copied raw email, and generate a HTML version
-//	for easy readability.
+//	This lambda will read RAW emails and convert them in easy to read formats
+//	like: HTML and Text.
 //
 exports.handler = (event) => {
 
 	//
-	//	1.	To a simple variable.
+	//	1.	We need to process the path received by S3 since AWS dose escape
+	//		the string in a special way. They escape the string in a HTML style
+	//		but for whatever reason they convert spaces in to +ses.
 	//
 	let s3_key = event.Records[0].s3.object.key;
 
 	//
-	//	2.	Replace all the + characters to a space one.
+	//	2.	So first we convert the + in to spaces.
 	//
 	let plus_to_space = s3_key.replace(/\+/g, ' ');
 
 	//
-	//	3.	Unescape the HTML URI style string.
+	//	3.	And then we unescape the string, other wise we lose
+	//		real + characters.
 	//
 	let unescaped_key = decodeURIComponent(plus_to_space);
 
@@ -41,8 +44,6 @@ exports.handler = (event) => {
 			attachments: []
 		}
 	}
-
-	console.log(container);
 
 	//
 	//	->	Start the chain.
@@ -87,7 +88,7 @@ exports.handler = (event) => {
 //
 
 //
-//	Load the email from S3.
+//	Load the email that triggered the function from S3.
 //
 function load_the_email(container)
 {
@@ -102,8 +103,6 @@ function load_the_email(container)
 			Bucket: container.bucket,
 			Key: container.key
 		};
-
-		console.log(params)
 
 		//
 		//	->	Execute the query.
@@ -134,13 +133,12 @@ function load_the_email(container)
 }
 
 //
-//	Convert the raw email in to HTML
+//	Convert the raw email in to HTML and Text, and extract also the
+//	attachments.
 //
 function parse_the_email(container)
 {
 	return new Promise(function(resolve, reject) {
-
-		console.info("parse_the_email");
 
 		//
 		//	1.	Parse the email and extract all the it necessary.
@@ -173,7 +171,7 @@ function parse_the_email(container)
 }
 
 //
-//	Save the text version of the email
+//	After the conversion we save the Text version to S3.
 //
 function save_text(container)
 {
@@ -189,8 +187,6 @@ function save_text(container)
 			Key: container.key + ".txt",
 			Body: container.parsed.text
 		};
-
-		console.log(params);
 
 		//
 		//	->	Execute the query.
@@ -216,7 +212,7 @@ function save_text(container)
 }
 
 //
-//	Save the html version of the email
+//	Then if we have a HTML version we try to save that.
 //
 function save_html(container)
 {
@@ -224,16 +220,18 @@ function save_html(container)
 
 		//
 		//	<>> When the body of an email have only one version, meaning it
-		//		dose have only the pure text version and no HTML one.
+		//		dose have only the pure text version and no HTML.
 		//
 		//		Nodemailer won't generate the HTML for you, it just grabs
 		//		what is in the Email body.
 		//
 		//		So, this value will be false, when there is no HTML content in
-		//		the email.
+		//		the email, and thus we skip this step.
 		//
 		if(!container.parsed.html)
 		{
+			console.info("save_html - skipped");
+
 			//
 			//	->	Move to the next chain.
 			//
@@ -251,8 +249,6 @@ function save_html(container)
 			Body: container.parsed.html
 		};
 
-		console.log(params)
-
 		//
 		//	->	Execute the query.
 		//
@@ -277,7 +273,8 @@ function save_html(container)
 }
 
 //
-//	Save all the attachments
+//	Last thing to do is to save the attachments if there are any. If the
+//	array is empty the loop will skip itself.
 //
 function save_attachments(container)
 {
@@ -286,7 +283,7 @@ function save_attachments(container)
 		console.info("save_attachments");
 
 		//
-		//	Start the loop which will download all the ads.
+		//	Start the loop which save all the attachments.
 		//
 		loop(function(error) {
 
@@ -296,7 +293,7 @@ function save_attachments(container)
 			if(error)
 			{
 				//
-				//	->	Move to the next chain.
+				//	->	Stop everything and surface the error.
 				//
 				return reject(container);
 			}
@@ -315,12 +312,12 @@ function save_attachments(container)
 		function loop(callback)
 		{
 			//
-			//	1.	Create a simple variable name.
+			//	1.	Pop the last element in the array if any.
 			//
 			let file = container.parsed.attachments.pop()
 
 			//
-			//	2.	if there is nothing left then we stop the loop.
+			//	2.	If there is nothing left then we stop the loop.
 			//
 			if(!file)
 			{
@@ -339,18 +336,20 @@ function save_attachments(container)
 
 			//
 			//	4.	Split the S3 Key (path) so we can remove the last element.
+			//		since we don't want the object name, we care only about
+			//		the path.
 			//
 			let tmp = container.key.split('/');
 
 			//
 			//	5.	Now remove the last element from the array which is the
-			//		file name that contains the raw email.
+			//		file name that contains the raw email, which we don't want.
 			//
 			tmp.pop();
 
 			//
-			//	6.	After all this we recombine the array in to a single string
-			//		which becomes again the S3 Key minus the file name.
+			//	6.	After all this, we recombine the array in to a single
+			//		string which becomes again the S3 Key minus the file name.
 			//
 			let path = tmp.join('/');
 
@@ -374,8 +373,7 @@ function save_attachments(container)
 			}
 
 			//
-			//	9. 	With a clean key, we can create an updated one which contains
-			//		the path to for the attachments.
+			//	9. 	Create the full key path with the object at the end.
 			//
 			let key = 	path
 						+ "/attachments/"
@@ -390,8 +388,6 @@ function save_attachments(container)
 				Key: key,
 				Body: file_body
 			};
-
-			console.log(params);
 
 			//
 			//	->	Execute the query.
