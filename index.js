@@ -52,6 +52,10 @@ exports.handler = (event) => {
 	load_the_email(container)
 		.then(function(container) {
 
+			return remove_extension(container);
+
+		}).then(function(container) {
+
 			return parse_the_email(container);
 
 		}).then(function(container) {
@@ -129,6 +133,41 @@ function load_the_email(container)
 			return resolve(container);
 
 		});
+
+	});
+}
+
+//
+//	Since the raw email is saved with an extension we need to remove it
+//	before we can save other converted versions.
+//
+function remove_extension(container)
+{
+	return new Promise(function(resolve, reject) {
+
+		console.info("remove_extension");
+
+		//
+		//	1.	Split the string.
+		//
+		let tmp = container.key.split('.');
+
+		//
+		//	2.	Remove the last element from the array which is `eml`.
+		//
+		tmp.pop();
+
+		//
+		//	2.	Join the array back to how it was, minus the extension.
+		//		We need to do this, since we don't know how many dots were in
+		//		the email title for example.
+		//
+		container.key = tmp.join('.');
+
+		//
+		//	->	Move to the next chain.
+		//
+		return resolve(container);
 
 	});
 }
