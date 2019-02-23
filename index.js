@@ -1,4 +1,5 @@
 let AWS = require('aws-sdk');
+let mime = require('mime');
 let parser = require("mailparser").simpleParser;
 
 //
@@ -350,37 +351,63 @@ function save_attachments(container)
 			}
 
 			//
-			//	5.	Then save the buffer of the attachment.
+			//	5.	Split the string to and get the last element of the array
+			//		which should be the file extension.
+			//
+			let extension = file_name.split('.').pop();
+
+			//
+			//	6.	Then we check if the last element is an extension.
+			//
+			let is_extension = mime.getType(extension);
+
+			//
+			//	7.	If it isn't, we get one from the content-type header.
+			//
+			if(!is_extension)
+			{
+				//
+				//	1.	Make sure we have a content type, since I'm sure
+				//		some emails won't have it if they were malformed.
+				//
+				if(file.contentType)
+				{
+					file_name += "." + mime.getExtension(file.contentType);
+				}
+			}
+
+			//
+			//	8.	Then save the buffer of the attachment.
 			//
 			file_body = file.content
 
 			//
-			//	6.	Split the S3 Key (path) so we can remove the last element.
+			//	9.	Split the S3 Key (path) so we can remove the last element.
 			//		since we don't want the object name, we care only about
 			//		the path.
 			//
 			let tmp = container.key.split('/');
 
 			//
-			//	7.	Now remove the last element from the array which is the
+			//	10.	Now remove the last element from the array which is the
 			//		file name that contains the raw email, which we don't want.
 			//
 			tmp.pop();
 
 			//
-			//	8.	After all this, we recombine the array in to a single
+			//	11.	After all this, we recombine the array in to a single
 			//		string which becomes again the S3 Key minus the file name.
 			//
 			let path = tmp.join('/');
 
 			//
-			//	9.	This variable is used if there are two files of the same
+			//	12.	This variable is used if there are two files of the same
 			//		name.
 			//
 			let cid = "";
 
 			//
-			//	10.	If the CID is set then it means that two files have the
+			//	13.	If the CID is set then it means that two files have the
 			//		same names.
 			//
 			if(file.cid)
@@ -393,7 +420,7 @@ function save_attachments(container)
 			}
 
 			//
-			//	11. Create the full key path with the object at the end.
+			//	14. Create the full key path with the object at the end.
 			//
 			let key = 	path
 						+ "/attachments/"
@@ -401,7 +428,7 @@ function save_attachments(container)
 						+ file_name
 
 			//
-			//	12.	Set the query.
+			//	15.	Set the query.
 			//
 			let params = {
 				Bucket: container.bucket,
