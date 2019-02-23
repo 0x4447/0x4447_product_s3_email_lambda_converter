@@ -411,7 +411,28 @@ function save_attachments(container)
 				//
 				if(file.contentType)
 				{
-					file_name += "." + mime.getExtension(file.contentType);
+					//
+					//	1.	Try to find out the file extension from the
+					//		content-type found in the email message.
+					//
+					let file_type = mime.getExtension(file.contentType);
+
+					//
+					//	2.	If the extension was not found, then we set a
+					//		default one which will let the user know
+					//		that we don't know the type of the file, while
+					//		also setting the type to txt (for convenience)
+					//		so it can be open by any editor and inspected.
+					//
+					if(!file_type)
+					{
+						file_type = 'unknown_extension.txt';
+					}
+
+					//
+					//	3.	Attach the extension to the file.
+					//
+					file_name += "." + file_type;
 				}
 			}
 
