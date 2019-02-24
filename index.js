@@ -1,4 +1,5 @@
 let AWS = require('aws-sdk');
+let mime = require('mime');
 let parser = require("mailparser").simpleParser;
 
 //
@@ -50,6 +51,10 @@ exports.handler = (event) => {
 	//
 	load_the_email(container)
 		.then(function(container) {
+
+			return remove_extension(container);
+
+		}).then(function(container) {
 
 			return parse_the_email(container);
 
@@ -128,6 +133,41 @@ function load_the_email(container)
 			return resolve(container);
 
 		});
+
+	});
+}
+
+//
+//	Since the raw email is saved with an extension we need to remove it
+//	before we can save other converted versions.
+//
+function remove_extension(container)
+{
+	return new Promise(function(resolve, reject) {
+
+		console.info("remove_extension");
+
+		//
+		//	1.	Split the string.
+		//
+		let tmp = container.key.split('.');
+
+		//
+		//	2.	Remove the last element from the array which is `eml`.
+		//
+		tmp.pop();
+
+		//
+		//	2.	Join the array back to how it was, minus the extension.
+		//		We need to do this, since we don't know how many dots were in
+		//		the email title for example.
+		//
+		container.key = tmp.join('.');
+
+		//
+		//	->	Move to the next chain.
+		//
+		return resolve(container);
 
 	});
 }
@@ -285,7 +325,7 @@ function save_attachments(container)
 		//
 		//	Start the loop which save all the attachments.
 		//
-		loop(function(error) {
+		loop(1, function(error) {
 
 			//
 			//	<<> Check if there was an error.
@@ -309,7 +349,7 @@ function save_attachments(container)
 		//	This loop will upload all the individual attachments found
 		//	in a email.
 		//
-		function loop(callback)
+		function loop(count, callback)
 		{
 			//
 			//	1.	Pop the last element in the array if any.
@@ -325,42 +365,109 @@ function save_attachments(container)
 			}
 
 			//
-			//	2.	Get the file name which also contain the file extension.
+			//	3.	Get the file name which also contain the file extension.
 			//
 			file_name = file.filename
 
 			//
-			//	3.	Then save the buffer of the attachment.
+			//	4.	An email attachment is not required to have a name, this
+			//		mean we need to check if we have a file name and, if not
+			//		we create a general name, so all attachments can be saved
+			//		and accounted for.
+			//
+			if(!file_name)
+			{
+				//
+				//	1.	Set the generic name with the count name so we give
+				//		unique names to each attachment.
+				//
+				file_name = "Mail Attachment " + count;
+
+				//
+				//	2.	We only count the times we had to set a generic name.
+				//
+				count++;
+			}
+
+			//
+			//	5.	Split the string to and get the last element of the array
+			//		which should be the file extension.
+			//
+			let extension = file_name.split('.').pop();
+
+			//
+			//	6.	Then we check if the last element is an extension.
+			//
+			let is_extension = mime.getType(extension);
+
+			//
+			//	7.	If it isn't, we get one from the content-type header.
+			//
+			if(!is_extension)
+			{
+				//
+				//	1.	Make sure we have a content type, since I'm sure
+				//		some emails won't have it if they were malformed.
+				//
+				if(file.contentType)
+				{
+					//
+					//	1.	Try to find out the file extension from the
+					//		content-type found in the email message.
+					//
+					let file_type = mime.getExtension(file.contentType);
+
+					//
+					//	2.	If the extension was not found, then we set a
+					//		default one which will let the user know
+					//		that we don't know the type of the file, while
+					//		also setting the type to txt (for convenience)
+					//		so it can be open by any editor and inspected.
+					//
+					if(!file_type)
+					{
+						file_type = 'unknown_extension.txt';
+					}
+
+					//
+					//	3.	Attach the extension to the file.
+					//
+					file_name += "." + file_type;
+				}
+			}
+
+			//
+			//	8.	Then save the buffer of the attachment.
 			//
 			file_body = file.content
 
 			//
-			//	4.	Split the S3 Key (path) so we can remove the last element.
+			//	9.	Split the S3 Key (path) so we can remove the last element.
 			//		since we don't want the object name, we care only about
 			//		the path.
 			//
 			let tmp = container.key.split('/');
 
 			//
-			//	5.	Now remove the last element from the array which is the
+			//	10.	Now remove the last element from the array which is the
 			//		file name that contains the raw email, which we don't want.
 			//
 			tmp.pop();
 
 			//
-			//	6.	After all this, we recombine the array in to a single
+			//	11.	After all this, we recombine the array in to a single
 			//		string which becomes again the S3 Key minus the file name.
 			//
 			let path = tmp.join('/');
 
 			//
-			//	7.	This variable is used if there are two files of the same
+			//	12.	This variable is used if there are two files of the same
 			//		name.
 			//
 			let cid = "";
 
 			//
-			//	8.	If the CID is set then it means that two files have the
+			//	13.	If the CID is set then it means that two files have the
 			//		same names.
 			//
 			if(file.cid)
@@ -373,7 +480,7 @@ function save_attachments(container)
 			}
 
 			//
-			//	9. 	Create the full key path with the object at the end.
+			//	14. Create the full key path with the object at the end.
 			//
 			let key = 	path
 						+ "/attachments/"
@@ -381,7 +488,7 @@ function save_attachments(container)
 						+ file_name
 
 			//
-			//	10.	Set the query.
+			//	15.	Set the query.
 			//
 			let params = {
 				Bucket: container.bucket,
@@ -405,7 +512,7 @@ function save_attachments(container)
 				//
 				//	->	Move to the next chain.
 				//
-				return loop(callback);
+				return loop(count, callback);
 
 			});
 		}
