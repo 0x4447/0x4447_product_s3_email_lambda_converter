@@ -225,7 +225,8 @@ function save_text(container)
 		let params = {
 			Bucket: container.bucket,
 			Key: container.key + ".txt",
-			Body: container.parsed.text
+			Body: container.parsed.text,
+			ContentType: 'text/plain'
 		};
 
 		//
@@ -286,7 +287,8 @@ function save_html(container)
 		let params = {
 			Bucket: container.bucket,
 			Key: container.key + ".html",
-			Body: container.parsed.html
+			Body: container.parsed.html,
+			ContentType: 'text/html'
 		};
 
 		//
